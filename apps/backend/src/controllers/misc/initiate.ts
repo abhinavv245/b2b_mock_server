@@ -27,7 +27,7 @@ export const initiateB2bController = async (req: Request, res: Response) => {
 		...search,
 		context: {
 			...search.context,
-			timestamp: (new Date()).toISOString(),
+			timestamp: new Date().toISOString(),
 			location: {
 				...search.context.location,
 				city,
@@ -43,17 +43,16 @@ export const initiateB2bController = async (req: Request, res: Response) => {
 
 	const header = await createAuthHeader(search);
 	try {
-		await redis.set(
-			`${transaction_id}-${search}-from-server`,
-			JSON.stringify({request: {...search}})
-		);
-
-		await axios.post(`${bpp_uri}/search`, search, {
+		const response = await axios.post(`${bpp_uri}/search`, search, {
 			headers: {
 				"X-Gateway-Authorization": header,
 				authorization: header,
 			},
 		});
+		await redis.set(
+			`${transaction_id}-search-from-server`,
+			JSON.stringify({ request: { ...search }, response })
+		);
 		return res.json({
 			message: {
 				ack: {
@@ -94,7 +93,7 @@ export const initiateServicesController = async (
 		...search,
 		context: {
 			...search.context,
-			timestamp: (new Date()).toISOString(),
+			timestamp: new Date().toISOString(),
 			location: {
 				...search.context.location,
 				city,
@@ -110,17 +109,16 @@ export const initiateServicesController = async (
 
 	const header = await createAuthHeader(search);
 	try {
-		await redis.set(
-			`${transaction_id}-${search}-from-server`,
-			JSON.stringify({request: {...search}})
-		);
-		await axios.post(`${bpp_uri}/search`, search, {
+		const response = await axios.post(`${bpp_uri}/search`, search, {
 			headers: {
 				"X-Gateway-Authorization": header,
 				authorization: header,
 			},
 		});
-
+		await redis.set(
+			`${transaction_id}-search-from-server`,
+			JSON.stringify({ request: { ...search }, response })
+		);
 		return res.json({
 			message: {
 				ack: {

@@ -116,17 +116,38 @@ export const Analyse = () => {
 					`${import.meta.env.VITE_SERVER_URL}/analyse/${event.target.value}`
 				);
 				console.log("RESPONSE", response);
+				const seen: Record<string, boolean> = {};
 				setResponseLogs(
-					response.data.sort(
-						(
-							a: {
-								request: { context: { timestamp: string | number | Date } };
-							},
-							b: { request: { context: { timestamp: string | number | Date } } }
-						) =>
-							new Date(a.request.context.timestamp!).getTime() -
-							new Date(b.request.context.timestamp!).getTime()
-					)
+					response.data
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						.reduce((uniqueArr: any[], item: { request: { context: { action: any; timestamp: any; }; }; }) => {
+							const { action, timestamp } = item.request.context;
+							if (!seen[action] || timestamp > seen[action]) {
+								seen[action] = timestamp; // Update latest timestamp for the action
+								const existingIndex = uniqueArr.findIndex(
+									(obj) => obj.action === action
+								);
+								if (existingIndex !== -1) {
+									
+									uniqueArr[existingIndex] = item;
+								} else {
+									uniqueArr.push(item);
+								}
+							}
+							return uniqueArr;
+						}, [])
+						.sort(
+							(
+								a: {
+									request: { context: { timestamp: string | number | Date } };
+								},
+								b: {
+									request: { context: { timestamp: string | number | Date } };
+								}
+							) =>
+								new Date(a.request.context.timestamp!).getTime() -
+								new Date(b.request.context.timestamp!).getTime()
+						)
 				);
 			} catch (error) {
 				console.log("Following error occurred while querying", error);
@@ -226,7 +247,7 @@ export const Analyse = () => {
 										item
 										xs={12}
 										sm={6}
-										md={4}
+										// md={4}
 										key={log.request.context.message_id + index}
 									>
 										<Paper sx={{ p: 1 }} elevation={3}>
@@ -264,7 +285,7 @@ export const Analyse = () => {
 															flexDirection: "column",
 															alignItems: "flex-start",
 														}}
-														onClick={handleLogDialog}
+														onClick={() => handleLogDialog(log)}
 													>
 														<Stack spacing={1} direction="row">
 															<Typography variant="body2">Type:</Typography>
@@ -283,7 +304,7 @@ export const Analyse = () => {
 																variant="body2"
 																color="text.secondary"
 															>
-																{log.timestamp}
+																{log.request.context.timestamp}
 															</Typography>
 														</Stack>
 														{log.request.context.bap_id && (
