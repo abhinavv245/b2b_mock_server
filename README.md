@@ -5,34 +5,34 @@ This is the monorepo for the ONDC Mock & Sandbox. It features an ExpressJS Web S
 
 # Mock Server
 This service will imitate various API behaviors like search, on_search, select, etc. You may use this server to expedite the implementation of your APIs.
-- If you are a buyer app (BAP), you can provide /action APIs payload and you will receive the subsequent sync and async responses.
+- If you are a buyer app (BAP), you can provide /action APIs payload and you will receive the subsequent sync and Asyncc responses.
 You'll either get an ACK or NACK as a sync response based on schema validations performed on your provided payload.
 If you receive a NACK as sync response, it indicates there are schema errors in your payload that you need to address.
 
 <div style="text-align:center">
-<img src="./docs/images/Sync_response_nack.png" alt="Asyn response" width="300" height="300">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/Sync_response_nack.png" alt="Asyncc response" width="300" height="300">
 </div>
 
-- If you receive an ACK sync response, you'll then get the subsequent async response. For example, if you provided a payload for the /action API, you'll receive an async response for the subsequent /on_action API. A notable feature of this service is the ability to select from various scenarios like location not serviceable, item out of stock, etc.
+- If you receive an ACK sync response, you'll then get the subsequent Asyncc response. For example, if you provided a payload for the /action API, you'll receive an Asyncc response for the subsequent /on_action API. A notable feature of this service is the ability to select from various scenarios like location not serviceable, item out of stock, etc.
 
 <div style="text-align:center">
-<img src="./docs/images/async_response.png" alt="Asyn response" width="300" height="300">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/Asyncc_response.png" alt="Async response" width="300" height="300">
 </div>
 
-- If you are a seller app (BPP), you can provide /on_action APIs payload and you will receive the subsequent sync and async request. Once you receive ACK as a sync response, you will receive the subsequent async request. For e.g. if you have provided the payload for /on_action API, then you will receive an async request for next /action API. 
+- If you are a seller app (BPP), you can provide /on_action APIs payload and you will receive the subsequent sync and Asyncc request. Once you receive ACK as a sync response, you will receive the subsequent Asyncc request. For e.g. if you have provided the payload for /on_action API, then you will receive an Asyncc request for next /action API. 
 
 # Sandbox
 
 - In this sandbox environment, you can freely test your APIs. However, to receive successful responses, it's necessary to be subscribed to the staging registry. This server will require and authenticate the authorization header for verification. Once you are subscribed to the staging registry and have developed the APIs, you can test them by providing the payload and authorization header. You may refer to this [document](https://github.com/ONDC-Official/developer-docs/blob/main/registry/signing-verification.md) and use the [utilities](https://github.com/ONDC-Official/reference-implementations/tree/main/utilities/signing_and_verification) to create the authorization header. 
 
-- Like mock server, sandbox will give you a sync as well as async response. You'll either get an ACK or NACK as a sync response based on schema validations applied to your provided payload and verification of authorization header. 
+- Like mock server, sandbox will give you a sync as well as Asyncc response. You'll either get an ACK or NACK as a sync response based on schema validations applied to your provided payload and verification of authorization header. 
 
-- If you receive a NACK sync response, it indicates there are schema errors in your payload that you need to address or the authorization header could not be verified. On the other hand, if you receive an ACK sync response, the asyn response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). For example, if you are BAP and provided a payload for the /action API, you'll receive an async response on the corresponding /on_action API endpoint and vice versa.
+- If you receive a NACK sync response, it indicates there are schema errors in your payload that you need to address or the authorization header could not be verified. On the other hand, if you receive an ACK sync response, the Async response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). For example, if you are BAP and provided a payload for the /action API, you'll receive an Asyncc response on the corresponding /on_action API endpoint and vice versa.
 
 - If you are a seller NP and wants to initiate a search request from the mock server, you can do it from the 'Initiate Search Request' section in the Sandbox UI.
 
 <div style="text-align:center">
-<img src="./docs/images/Initiate_request.png" alt="Asyn response" width="300" height="300">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/Initiate_request.png" alt="Async response" width="300" height="300">
 </div>
 
 - The sandbox will also generate a cURL command or you can create yourself that you can execute directly from the command line interface (CLI) to sandbox environments.
@@ -92,7 +92,7 @@ There are two type of NPs one is BPP (Seller app) and BAP (Buyer app).
 - All the **on_actions** calls are hosted on the BAP server. So if you want make mock requests to BAP or the buyer app, then select _/b2b/bap_ from the servers dropdown.
 
 <div style="text-align:center">
-<img src="./docs/images/swagger_server.png" alt="Asyn response" width="500" height="70">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/swagger_server.png" alt="Async response" width="500" height="70">
 </div>
 
 **Make a request**
@@ -105,11 +105,11 @@ Since you have selected the desired server, now you can make the requests to tha
 You can select service from `mode` dropdown.
 
 <div style="text-align:center">
-<img src="./docs/images/Swagger_1.png" alt="Asyn response" width="500" height="300">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/Swagger_1.png" alt="Async response" width="500" height="300">
 </div>
 
 <div style="text-align:center">
-<img src="./docs/images/swagger_2.png" alt="Asyn response" width="500" height="300">
+<img src="https://github.com/abhinavv245/b2b_mock_server/blob/draft-mock_server/docs/images/swagger_2.png" alt="Async response" width="500" height="300">
 </div>
 
 **Sandbox**
@@ -121,9 +121,9 @@ To use the sandbox you need to have an authorization header which is to be passe
 You can use Mock service to mock the requests. It doesn't require authorization header to be passed.
 
 Then choose the API end point you want to mock, click on 'Try it out'. You may use the examples available from the dropdown or use your own. Then click on 'Execute'. 
-If you receive a NACK as sync response, it indicates there are schema errors in your payload that you need to address. If you receive an ACK sync response, you'll then get the subsequent async response/request.
+If you receive a NACK as sync response, it indicates there are schema errors in your payload that you need to address. If you receive an ACK sync response, you'll then get the subsequent Asyncc response/request.
 
-In case you use mock service you will receive both `sync` and `async` and in case of sandbox service you will receive only `sync` response with `ACK` and `async` response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). 
+In case you use mock service you will receive both `sync` and `Asyncc` and in case of sandbox service you will receive only `sync` response with `ACK` and `Asyncc` response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). 
 
 ## Other Services
 
