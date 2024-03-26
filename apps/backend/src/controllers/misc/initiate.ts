@@ -17,7 +17,6 @@ import { v4 as uuidv4 } from "uuid";
 
 export const initiateB2bController = async (req: Request, res: Response) => {
 	const { bpp_uri, city, domain } = req.body;
-
 	var file = fs.readFileSync(
 		path.join(B2B_EXAMPLES_PATH, "search/search_by_category.yaml")
 	);
@@ -28,6 +27,7 @@ export const initiateB2bController = async (req: Request, res: Response) => {
 		...search,
 		context: {
 			...search.context,
+			timestamp: (new Date()).toISOString(),
 			location: {
 				...search.context.location,
 				city,
@@ -45,7 +45,7 @@ export const initiateB2bController = async (req: Request, res: Response) => {
 	try {
 		await redis.set(
 			`${transaction_id}-${search}-from-server`,
-			JSON.stringify(search)
+			JSON.stringify({request: {...search}})
 		);
 
 		await axios.post(`${bpp_uri}/search`, search, {
@@ -94,6 +94,7 @@ export const initiateServicesController = async (
 		...search,
 		context: {
 			...search.context,
+			timestamp: (new Date()).toISOString(),
 			location: {
 				...search.context.location,
 				city,
@@ -111,7 +112,7 @@ export const initiateServicesController = async (
 	try {
 		await redis.set(
 			`${transaction_id}-${search}-from-server`,
-			JSON.stringify(search)
+			JSON.stringify({request: {...search}})
 		);
 		await axios.post(`${bpp_uri}/search`, search, {
 			headers: {
