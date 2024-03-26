@@ -8,7 +8,16 @@ This service will imitate various API behaviors like search, on_search, select, 
 - If you are a buyer app (BAP), you can provide /action APIs payload and you will receive the subsequent sync and async responses.
 You'll either get an ACK or NACK as a sync response based on schema validations performed on your provided payload.
 If you receive a NACK as sync response, it indicates there are schema errors in your payload that you need to address.
+
+<div style="text-align:center">
+<img src="./docs/images/Sync_response_nack.png" alt="Asyn response" width="300" height="300">
+</div>
+
 - If you receive an ACK sync response, you'll then get the subsequent async response. For example, if you provided a payload for the /action API, you'll receive an async response for the subsequent /on_action API. A notable feature of this service is the ability to select from various scenarios like location not serviceable, item out of stock, etc.
+
+<div style="text-align:center">
+<img src="./docs/images/async_response.png" alt="Asyn response" width="300" height="300">
+</div>
 
 - If you are a seller app (BPP), you can provide /on_action APIs payload and you will receive the subsequent sync and async request. Once you receive ACK as a sync response, you will receive the subsequent async request. For e.g. if you have provided the payload for /on_action API, then you will receive an async request for next /action API. 
 
@@ -19,6 +28,12 @@ If you receive a NACK as sync response, it indicates there are schema errors in 
 - Like mock server, sandbox will give you a sync as well as async response. You'll either get an ACK or NACK as a sync response based on schema validations applied to your provided payload and verification of authorization header. 
 
 - If you receive a NACK sync response, it indicates there are schema errors in your payload that you need to address or the authorization header could not be verified. On the other hand, if you receive an ACK sync response, the asyn response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). For example, if you are BAP and provided a payload for the /action API, you'll receive an async response on the corresponding /on_action API endpoint and vice versa.
+
+- If you are a seller NP and wants to initiate a search request from the mock server, you can do it from the 'Initiate Search Request' section in the Sandbox UI.
+
+<div style="text-align:center">
+<img src="./docs/images/Initiate_request.png" alt="Asyn response" width="300" height="300">
+</div>
 
 - The sandbox will also generate a cURL command or you can create yourself that you can execute directly from the command line interface (CLI) to sandbox environments.
 
@@ -76,6 +91,10 @@ There are two type of NPs one is BPP (Seller app) and BAP (Buyer app).
 
 - All the **on_actions** calls are hosted on the BAP server. So if you want make mock requests to BAP or the buyer app, then select _/b2b/bap_ from the servers dropdown.
 
+<div style="text-align:center">
+<img src="./docs/images/swagger_server.png" alt="Asyn response" width="500" height="70">
+</div>
+
 **Make a request**
 
 Since you have selected the desired server, now you can make the requests to that server. There are two serivces available to test with :
@@ -84,6 +103,14 @@ Since you have selected the desired server, now you can make the requests to tha
 - Mock
   
 You can select service from `mode` dropdown.
+
+<div style="text-align:center">
+<img src="./docs/images/Swagger_1.png" alt="Asyn response" width="500" height="300">
+</div>
+
+<div style="text-align:center">
+<img src="./docs/images/swagger_2.png" alt="Asyn response" width="500" height="300">
+</div>
 
 **Sandbox**
 
@@ -97,6 +124,15 @@ Then choose the API end point you want to mock, click on 'Try it out'. You may u
 If you receive a NACK as sync response, it indicates there are schema errors in your payload that you need to address. If you receive an ACK sync response, you'll then get the subsequent async response/request.
 
 In case you use mock service you will receive both `sync` and `async` and in case of sandbox service you will receive only `sync` response with `ACK` and `async` response will be sent back to the respective API end point hosted on your server (bap_uri or bpp_uri sent in context part). 
+
+## Other Services
+
+- You have the option to generate and authenticate the authorization header directly from the Sandbox UI. The `/signature` API facilitates the creation of the authorization header. It generates the authorization header using a provided private key, subscriber ID, unique key ID, and body. Please remember not to employ your production private key. This utility endpoint is solely intended for development testing purposes during integration. Likewise, you can utilize the       `/signCheck` API to authenticate an authorization header from the UI.
+
+- Another available service is Transaction Analysis, which provides access to the log trail of a specific transaction. The API endpoint for this service is `/analyse/{transactionId}`, where it retrieves transaction details based on the transaction ID provided.
+
+
+
 
 
 
