@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import { redis } from "../../lib/utils";
 
 export const analyseController = async (req: Request, res: Response) => {
-	var to_server: object = {},
-		from_server: object = {};
+	var storedTransaction: object[] = [];
 	const transactionId = req.params["transactionId"];
 	if (!transactionId)
 		return res.status(400).json({
@@ -17,18 +16,40 @@ export const analyseController = async (req: Request, res: Response) => {
 			},
 		});
 	const transactionKeys = await redis.keys(`${transactionId}-*`);
-	if (transactionKeys.length === 0) return res.json({});
+	if (transactionKeys.length === 0) return res.json([]);
 	if (transactionKeys.filter((e) => e.endsWith("-from-server")).length > 0) {
 		var transactions = await redis.mget(
 			transactionKeys.filter((e) => e.endsWith("-from-server"))
 		);
-		from_server = transactions.map((each) => (each ? JSON.parse(each) : {}));
+		storedTransaction.push(
+			transactions.map((each) => {
+				if (!each) return null;
+				var parsed = JSON.parse(each);
+				return {
+					...parsed,
+					type: "from_server",
+					action: (parsed.request as any).context.action,
+					timestamp: (parsed.request as any).context.timeStamp,
+				};
+			})
+		);
 	}
 	if (transactionKeys.filter((e) => e.endsWith("-to-server")).length > 0) {
 		var transactions = await redis.mget(
 			transactionKeys.filter((e) => e.endsWith("-to-server"))
 		);
-		to_server = transactions.map((each) => (each ? JSON.parse(each) : {}));
+		storedTransaction.push(
+			transactions.map((each) => {
+				if (!each) return null;
+				var parsed = JSON.parse(each);
+				return {
+					...parsed,
+					type: "to_server",
+					action: (parsed.request as any).context.action,
+					timestamp: (parsed.request as any).context.timeStamp,
+				};
+			})
+		);
 	}
-	return res.json({ from_server, to_server });
+	return res.json(storedTransaction.flat());
 };

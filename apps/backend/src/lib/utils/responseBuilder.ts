@@ -73,7 +73,7 @@ export const responseBuilder = async (
 					domain === "b2b"
 						? B2B_BPP_MOCKSERVER_URL
 						: SERVICES_BPP_MOCKSERVER_URL,
-				timeStamp: ts.toISOString(),
+				timestamp: ts.toISOString(),
 				action,
 			},
 		};
@@ -89,7 +89,7 @@ export const responseBuilder = async (
 					domain === "b2b"
 						? B2B_BAP_MOCKSERVER_URL
 						: SERVICES_BAP_MOCKSERVER_URL,
-				timeStamp: ts.toISOString(),
+				timestamp: ts.toISOString(),
 				message_id: uuidv4(),
 				action,
 			},
