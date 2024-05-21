@@ -1,13 +1,18 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Layout } from "./layout/Layout";
-import { Analyse, Landing, Mock, Sandbox, Swagger } from "./pages";
+import { Analyse, Landing, Mock, Sandbox, Sign, Swagger } from "./pages";
 import {
 	AuthSwagger,
 	B2BSwagger,
 	MiscSwagger,
 	ServicesSwagger,
 } from "./pages/swagger/domains";
-import { MockProvider, SandboxProvider } from "./utils/context";
+import {
+	AnalyseProvider,
+	MessageProvider,
+	MockProvider,
+	SandboxProvider,
+} from "./utils/context";
 import { B2BMock, ServicesMock } from "./pages/mock/domains";
 import { B2BSandbox, ServicesSandbox } from "./pages/sandbox/domains";
 
@@ -19,6 +24,10 @@ const router = createBrowserRouter([
 			{
 				path: "/",
 				Component: Landing,
+			},
+			{
+				path: "/sign-check",
+				Component: Sign,
 			},
 			{
 				path: "/mock",
@@ -68,12 +77,20 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "/analyse",
-				Component: Analyse,
+				Component: () => (
+					<AnalyseProvider>
+						<Analyse />
+					</AnalyseProvider>
+				),
 			},
 		],
 	},
 ]);
 
 export default function App() {
-	return <RouterProvider router={router} />;
+	return (
+		<MessageProvider>
+			<RouterProvider router={router} />
+		</MessageProvider>
+	);
 }

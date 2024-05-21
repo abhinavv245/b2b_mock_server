@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Response } from "express";
+import { NextFunction, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import {
 	B2B_BAP_MOCKSERVER_URL,
@@ -7,10 +7,15 @@ import {
 	MOCKSERVER_ID,
 	SERVICES_BAP_MOCKSERVER_URL,
 	SERVICES_BPP_MOCKSERVER_URL,
+	SERVICES_EXAMPLES_PATH,
 } from "./constants";
 import { createAuthHeader } from "./responseAuth";
 import { logger } from "./logger";
 import { TransactionType, redis } from "./redis";
+import fs from "fs";
+import path from "path";
+import YAML from "yaml";
+import { AxiosError } from "axios";
 
 interface TagDescriptor {
 	code: string;
@@ -46,20 +51,24 @@ interface Item {
 
 export const responseBuilder = async (
 	res: Response,
+	next: NextFunction,
 	reqContext: object,
 	message: object,
 	uri: string,
 	action: string,
-	domain: "b2b" | "services"
+	domain: "b2b" | "services",
+	error?: object | undefined,
 ) => {
-	var transaction: TransactionType = res.locals.logs;
 	res.locals = {};
 	// var ts = new Date((reqContext as any).timestamp);
 	var ts = new Date();
 	ts.setSeconds(ts.getSeconds() + 1);
 	const sandboxMode = res.getHeader("mode") === "sandbox";
 	// console.log("SANDBOX>", sandboxMode);
-	var async: { message: object; context?: object } = { context: {}, message };
+	var async: { message: object; context?: object; error?: object } = {
+		context: {},
+		message,
+	};
 
 	if (action.startsWith("on_")) {
 		// const { bap_uri, bap_id, ...remainingContext } = reqContext as any;
@@ -95,105 +104,85 @@ export const responseBuilder = async (
 			},
 		};
 	}
+	if (error) {
+		async = { ...async, error };
+	}
 	const header = await createAuthHeader(async);
-	res.setHeader("authorization", header);
 
 	if (sandboxMode) {
-		logger.info("=======================");
-		logger.info("TIME", Date.now());
-		logger.info("ACTION", action);
-		// logger.info("TRANSACTION BEFORE:", transaction)
-
-		// if (action.startsWith("on_")) {
-		var log: TransactionType = {
-			request: async,
-		};
-		await redis.set(
-			`${(async.context! as any).transaction_id}-${action}-from-server`,
-			JSON.stringify(log)
-		);
-		try {
-			const response = await axios.post(uri, async, {
-				headers: {
-					authorization: header,
-				},
-			});
-
-			log.response = {
-				timestamp: new Date().toISOString(),
-				response: response.data,
+		if (action.startsWith("on_")) {
+			var log: TransactionType = {
+				request: async,
 			};
-
-			await redis.set(
-				`${(async.context! as any).transaction_id}-${action}-from-server`,
-				JSON.stringify(log)
-			);
-		} catch (error) {
-			console.log("ERROR", error);
-			logger.error({
-				type: "response",
-				message: {
-					message: "ERROR OCCURRED WHILE PINGING SANDBOX RESPONSE",
-					error: error,
-				},
-			});
-			logger.error({
-				type: "response",
-				message: {
-					message: { ack: { status: "NACK" } },
-					error: {
-						message: (error as any).response.data,
+			if (action === "on_status") {
+				const transactionKeys = await redis.keys(
+					`${(async.context! as any).transaction_id}-*`
+				);
+				const logIndex = transactionKeys.filter((e) =>
+					e.includes("on_status-to-server")
+				).length;
+				await redis.set(
+					`${
+						(async.context! as any).transaction_id
+					}-${logIndex}-${action}-from-server`,
+					JSON.stringify(log)
+				);
+			} else {
+				await redis.set(
+					`${(async.context! as any).transaction_id}-${action}-from-server`,
+					JSON.stringify(log)
+				);
+			}
+			try {
+				const response = await axios.post(uri, async, {
+					headers: {
+						authorization: header,
 					},
-				},
-			});
-			const response = {
-				message: {
-					ack: {
-						status: "NACK",
-					},
-				},
-				error: {
-					// message: (error as any).message,
-					message: (error as any).response.data,
-				},
-			};
-			log.response = {
-				timestamp: new Date().toISOString(),
-				response: response.message,
-			};
+				});
 
-			await redis.set(
-				`${(async.context! as any).transaction_id}-${action}-from-server`,
-				JSON.stringify(log)
-			);
+				log.response = {
+					timestamp: new Date().toISOString(),
+					response: response.data,
+				};
 
-			return res.json({
-				...response,
-				async,
-			});
+				await redis.set(
+					`${(async.context! as any).transaction_id}-${action}-from-server`,
+					JSON.stringify(log)
+				);
+			} catch (error) {
+				const response =
+					error instanceof AxiosError
+						? error.response
+						: {
+								message: {
+									ack: {
+										status: "NACK",
+									},
+								},
+								error: {
+									message: error,
+								},
+						  };
+				log.response = {
+					timestamp: new Date().toISOString(),
+					response: response,
+				};
+
+				await redis.set(
+					`${(async.context! as any).transaction_id}-${action}-from-server`,
+					JSON.stringify(log)
+				);
+
+				return next(error)
+			}
 		}
-		// } else {
-		// 	transaction.actionStats = {
-		// 		...transaction.actionStats,
-		// 		[action]: {
-		// 			requestFromServer: true,
-		// 			requestToServer: false,
-		// 			cached: true,
-		// 			npRequest: {
-		// 				timestamp: ts.toISOString(),
-		// 				request: async,
-		// 			},
-		// 		},
-		// 	};
-		// 	await redis.set(
-		// 		(async.context! as any).transaction_id,
-		// 		JSON.stringify(transaction)
-		// 	);
-		// }
-		logger.info("TRANSACTION AFTER:", log);
-		logger.info("**********************");
 
-		logger.info({ message: { ack: { status: "ACK" } } });
+		logger.info({
+			type: "response",
+			action: action,
+			transaction_id: (reqContext as any).transaction_id,
+			message: { sync: { message: { ack: { status: "ACK" } } } },
+		});
 		return res.json({
 			message: {
 				ack: {
@@ -202,7 +191,6 @@ export const responseBuilder = async (
 			},
 		});
 	} else {
-		logger.info({ sync: { message: { ack: { status: "ACK" } } }, async });
 		return res.json({
 			sync: {
 				message: {
@@ -320,20 +308,21 @@ export const quoteCreatorService = (items: Item[]) => {
 			},
 			tags: [
 				{
-					"descriptor": {
-						"code": "title"
+					descriptor: {
+						code: "title",
 					},
-					"list": [
+					list: [
 						{
-							"descriptor": {
-								"code": "type"
+							descriptor: {
+								code: "type",
 							},
-							"value": "item"
-						}
-					]
-				}
-			]
-		}, {
+							value: "item",
+						},
+					],
+				},
+			],
+		},
+		{
 			title: "tax",
 			price: {
 				currency: "INR",
@@ -341,34 +330,35 @@ export const quoteCreatorService = (items: Item[]) => {
 			},
 			tags: [
 				{
-					"descriptor": {
-						"code": "title"
+					descriptor: {
+						code: "title",
 					},
-					"list": [
+					list: [
 						{
-							"descriptor": {
-								"code": "type"
+							descriptor: {
+								code: "type",
 							},
-							"value": "tax"
-						}
-					]
-				}
-			]
-		}
+							value: "tax",
+						},
+					],
+				},
+			],
+		},
 	];
 
-	items.forEach(item => {
+	items.forEach((item) => {
 		breakup.forEach((each) => {
 			each.item = {
 				id: item.id,
 				price: {
 					currency: "INR",
 					value: "99",
-				}
-			}
-		})
-	})
-
+				},
+				quantity: item.quantity ? item.quantity : undefined,
+			};
+		});
+	});
+	console;
 	return {
 		breakup,
 		price: {
@@ -377,4 +367,443 @@ export const quoteCreatorService = (items: Item[]) => {
 		},
 		ttl: "P1D",
 	};
+};
+
+export const quoteCreatorServiceCustomized = (items: Item[]) => {
+	// var breakup: any[] = [
+	// 	{
+	// 		title: "Service/Consultation",
+	// 		price: {
+	// 			currency: "INR",
+	// 			value: "99",
+	// 		},
+	// 		tags: [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "item"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	}, {
+	// 		title: "tax",
+	// 		price: {
+	// 			currency: "INR",
+	// 			value: "0",
+	// 		},
+	// 		tags: [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	}
+	// ];
+
+	const file = fs.readFileSync(
+		path.join(
+			SERVICES_EXAMPLES_PATH,
+			"on_select/on_select_service_customization_confirmed.yaml"
+		)
+	);
+	const response = YAML.parse(file.toString());
+
+	const { price, ttl, breakup } = response.value.message.order.quote;
+
+	// const breakup = [
+	// 	{
+	// 		"title": "Cook - On Demand",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "00.00"
+	// 		},
+	// 		"item": {
+	// 			"id": "I1",
+	// 			"price": {
+	// 				"currency": "INR",
+	// 				"value": "00.00"
+	// 			}
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "item"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "People",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "299.00"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC1",
+	// 			"quantity": {
+	// 				"selected": {
+	// 					"count": 3
+	// 				}
+	// 			},
+	// 			"price": {
+	// 				"currency": "INR",
+	// 				"value": "199.00"
+	// 			}
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "customization"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "Sandwich",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "199.00"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC2",
+	// 			"quantity": {
+	// 				"selected": {
+	// 					"count": 1
+	// 				}
+	// 			},
+	// 			"price": {
+	// 				"currency": "INR",
+	// 				"value": "199.00"
+	// 			}
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "customization"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "Dahi Ke Kebab",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "199.00"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC3",
+	// 			"quantity": {
+	// 				"selected": {
+	// 					"count": 1
+	// 				}
+	// 			},
+	// 			"price": {
+	// 				"currency": "INR",
+	// 				"value": "199.00"
+	// 			}
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "customization"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "Dal Makhni",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "199.00"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC4",
+	// 			"quantity": {
+	// 				"selected": {
+	// 					"count": 1
+	// 				}
+	// 			},
+	// 			"price": {
+	// 				"currency": "INR",
+	// 				"value": "199.00"
+	// 			}
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "customization"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "tax",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "25"
+	// 		},
+	// 		"item": {
+	// 			"id": "I1"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "tax",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "25"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC1"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "tax",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "25"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC2"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "tax",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "25"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC3"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "tax",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "25"
+	// 		},
+	// 		"item": {
+	// 			"id": "IC4"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "tax"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "discount",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "0"
+	// 		},
+	// 		"item": {
+	// 			"id": "I1"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "discount"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	},
+	// 	{
+	// 		"title": "convenience_fee",
+	// 		"price": {
+	// 			"currency": "INR",
+	// 			"value": "0"
+	// 		},
+	// 		"item": {
+	// 			"id": "I1"
+	// 		},
+	// 		"tags": [
+	// 			{
+	// 				"descriptor": {
+	// 					"code": "title"
+	// 				},
+	// 				"list": [
+	// 					{
+	// 						"descriptor": {
+	// 							"code": "type"
+	// 						},
+	// 						"value": "misc"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 	}
+	// ]
+
+	items.forEach((item) => {
+		breakup.forEach((each: any) => {
+			each.item = {
+				id: item.id,
+				price: {
+					currency: "INR",
+					value: "99",
+				},
+				quantity: item.quantity ? item.quantity : undefined,
+			};
+		});
+	});
+
+	return {
+		breakup,
+		price: {
+			currency: "INR",
+			value: (99 * items.length).toString(),
+		},
+		ttl,
+	};
+};
+
+export const checkIfCustomized = (items: Item[]) => {
+	return items.some(
+		(item) =>
+			item.tags &&
+			item.tags.some(
+				(tag) =>
+					tag.list &&
+					tag.list.some((subTag) => {
+						if (subTag.descriptor.code === "type") {
+							return subTag.value === "customization";
+						}
+					})
+			)
+	);
 };

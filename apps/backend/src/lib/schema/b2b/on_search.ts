@@ -9,16 +9,7 @@ export const onSearchSchema = {
 			properties: {
 				domain: {
 					type: "string",
-					enum: [
-						DOMAIN.bpc,
-						DOMAIN.electronics,
-						DOMAIN.fashion,
-						DOMAIN.grocery,
-						DOMAIN.autoparts_and_components,
-						DOMAIN.building_and_contruction_supplies,
-						DOMAIN.chemicals,
-						DOMAIN.hardware_and_industrial
-					],
+					enum: DOMAIN,
 				},
 				location: {
 					type: "object",
@@ -609,7 +600,7 @@ export const onSearchSchema = {
 														type: "string",
 													},
 												},
-												"add_ons": {
+												add_ons: {
 													type: "array",
 													items: {
 														type: "object",

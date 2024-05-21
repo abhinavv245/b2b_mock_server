@@ -225,6 +225,65 @@
 					}
 				}
 			}
+		},
+		"/scenario/{domain}/{action}": {
+			"get": {
+				"tags": ["Misc"],
+				"summary": "Get scenarios for given domain and action",
+				"description": "Returns all the scenarios supported by Mock Server for a given domain and an action",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "domain",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"services",
+								"b2b"
+							]
+						},
+						"required": true,
+						"description": "The Domain whose scenarios are needed"
+					},
+					{
+						"in": "path",
+						"name": "action",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"search",
+								"on_search",
+								"select",
+								"on_select",
+								"init",
+								"on_init",
+								"confirm",
+								"on_confirm",
+								"update",
+								"on_update",
+								"status",
+								"on_status",
+								"cancel",
+								"on_cancel"
+							]
+						},
+						"required": true,
+						"description": "The Action whose scenarios are needed"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Scenarios",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }

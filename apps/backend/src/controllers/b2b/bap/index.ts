@@ -7,12 +7,13 @@ import { onSelectController } from "./onSelect";
 import { onConfirmController } from "./onConfirm";
 import { onStatusController } from "./onStatus";
 import { onUpdateController } from "./onUpdate";
+import { onCancelController } from "./onCancel";
 
 export const bapRouter = Router();
 
 bapRouter.post(
 	"/on_search",
-	// jsonSchemaValidator({ domain: "b2b", action: "on_search" }),
+	jsonSchemaValidator({ domain: "b2b", action: "on_search" }),
 	redisRetriever,
 	onSearchController
 );
@@ -50,3 +51,11 @@ bapRouter.post(
 	redisRetriever,
 	onUpdateController
 );
+
+
+bapRouter.post(
+	"/on_cancel",
+	jsonSchemaValidator({ domain: "b2b", action: "on_cancel" }),
+	redisRetriever,
+	onCancelController
+)

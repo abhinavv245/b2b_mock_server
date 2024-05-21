@@ -7,6 +7,7 @@ import { confirmController } from "./confirm";
 import { statusController } from "./status";
 import { updateController } from "./update";
 import { jsonSchemaValidator, redisRetriever } from "../../../middlewares";
+import { cancelController } from "./cancel";
 
 export const bppRouter = Router();
 
@@ -50,3 +51,10 @@ bppRouter.post(
 	redisRetriever,
 	statusController
 );
+
+bppRouter.post(
+	"/cancel",
+	jsonSchemaValidator({domain: "b2b", action: "cancel"}),
+	redisRetriever,
+	cancelController
+)

@@ -57,7 +57,8 @@ const DOMAIN_NAVS = [
 	{
 		name: "Sign Check",
 		nested: false,
-		path: "/swagger/auth",
+		path: "/sign-check",
+		// path: "/swagger/auth",
 	},
 	{
 		name: "Analyse Transaction",

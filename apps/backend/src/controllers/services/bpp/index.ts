@@ -7,18 +7,53 @@ import { confirmController } from "./confirm";
 import { statusController } from "./status";
 import { updateController } from "./update";
 import { cancelController } from "./cancel";
-import { redisRetriever } from "../../../middlewares";
+import { jsonSchemaValidator, redisRetriever } from "../../../middlewares";
 
 export const bppRouter = Router();
 
-bppRouter.post("/search", redisRetriever, searchController);
+bppRouter.post(
+	"/search",
+	jsonSchemaValidator({ domain: "services", action: "search" }),
+	redisRetriever,
+	searchController
+);
 
-bppRouter.post("/init", redisRetriever, initController);
+bppRouter.post(
+	"/init",
+	jsonSchemaValidator({ domain: "services", action: "init" }),
+	redisRetriever,
+	initController
+);
 
-bppRouter.post("/select", redisRetriever, selectController);
+bppRouter.post(
+	"/select",
+	jsonSchemaValidator({ domain: "services", action: "select" }),
+	redisRetriever,
+	selectController
+);
 
-bppRouter.post("/confirm", redisRetriever, confirmController);
+bppRouter.post(
+	"/confirm",
+	jsonSchemaValidator({ domain: "services", action: "confirm" }),
+	redisRetriever,
+	confirmController
+);
 
-bppRouter.post("/update", redisRetriever, updateController);
-bppRouter.post("/status", redisRetriever, statusController);
-bppRouter.post("/cancel", redisRetriever, cancelController);
+bppRouter.post(
+	"/update",
+	jsonSchemaValidator({ domain: "services", action: "update" }),
+	redisRetriever,
+	updateController
+);
+bppRouter.post(
+	"/status",
+	jsonSchemaValidator({ domain: "services", action: "status" }),
+	redisRetriever,
+	statusController
+);
+bppRouter.post(
+	"/cancel",
+	jsonSchemaValidator({ domain: "services", action: "cancel" }),
+	redisRetriever,
+	cancelController
+);

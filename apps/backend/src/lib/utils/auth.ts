@@ -29,8 +29,7 @@ export const split_auth_header = (auth_header: string) => {
 
 export async function verifyHeader(
 	header: string,
-	req: Request,
-	_res: Response
+	rawBody: string
 ): Promise<boolean> {
 	try {
 		const parts = split_auth_header(header);
@@ -44,10 +43,11 @@ export async function verifyHeader(
 			subscriber_id,
 			unique_key_id
 		);
+		
 		for (const each of subscribers_details) {
 			const public_key = each.signing_public_key;
 			const { signing_string } = await createSigningString(
-				JSON.stringify(req.body),
+				rawBody,
 				parts["created"],
 				parts["expires"]
 			);

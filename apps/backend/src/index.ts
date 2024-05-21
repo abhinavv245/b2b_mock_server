@@ -13,7 +13,10 @@ import {
 	authSwagger,
 	b2bSwagger,
 	miscSwagger,
+	requestParser,
 	servicesSwagger,
+	globalErrorHandler,
+	errorHandlingWrapper,
 } from "./middlewares";
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -29,12 +32,16 @@ app.use(
 	servicesSwagger("/api-docs/services")
 );
 
-app.use(express.json({ limit: "50mb" }));
+app.use(express.raw({ type: "*/*", limit: "1mb" }));
+app.use(requestParser);
 app.use("/", miscRouter);
 
-app.use("/b2b", b2bRouter);
-app.use("/auth", authRouter);
-app.use("/services", servicesRouter);
+app.use("/b2b", errorHandlingWrapper(b2bRouter));
+app.use("/auth", errorHandlingWrapper(authRouter));
+app.use("/services", errorHandlingWrapper(servicesRouter));
+
+app.use(globalErrorHandler);
+
 app.use("/detect_app_installation", (req: Request, res: Response) => {
 	const headers = req.headers;
 	return res.json({

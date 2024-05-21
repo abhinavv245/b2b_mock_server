@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 import fs from "fs";
 import path from "path";
@@ -6,7 +6,7 @@ import YAML from "yaml";
 import { B2B_EXAMPLES_PATH, responseBuilder } from "../../../lib/utils";
 import axios from "axios";
 
-export const searchController = async (req: Request, res: Response) => {
+export const searchController = async (req: Request, res: Response, next: NextFunction) => {
 	const domain = req.body.context.domain;
 
 	var onSearch;
@@ -93,6 +93,7 @@ export const searchController = async (req: Request, res: Response) => {
 
 	return responseBuilder(
 		res,
+		next,
 		req.body.context,
 		onSearch.value.message,
 		`${req.body.context.bap_uri}${

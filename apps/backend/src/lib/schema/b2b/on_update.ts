@@ -9,7 +9,7 @@ export const onUpdateSchema = {
 			properties: {
 				domain: {
 					type: "string",
-					enum: [DOMAIN.grocery],
+					enum: DOMAIN,
 				},
 				location: {
 					type: "object",

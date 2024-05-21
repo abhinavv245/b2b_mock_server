@@ -1,4 +1,5 @@
 import { b2bSchemaValidator } from "../lib/schema/b2b";
+import { srvSchemaValidator } from "../lib/schema/services";
 type JsonSchemaValidatorType = {
 	domain: "b2b" | "services";
 	action:
@@ -23,7 +24,9 @@ export const jsonSchemaValidator = ({
 	domain,
 	action,
 }: JsonSchemaValidatorType) => {
-	// if (domain === "b2b") {
+	if (domain === "b2b") {
 	return b2bSchemaValidator(action);
-	// }
+	} else {
+		return srvSchemaValidator(action)
+	}
 };

@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { TransactionType, logger, redis } from "../lib/utils";
+import { redis } from "../lib/utils";
 
 export const redisRetriever = async (
 	req: Request,
-	res: Response,
+	_res: Response,
 	next: NextFunction
 ) => {
 	if (req.headers["mode"] === "mock") {
@@ -13,27 +13,46 @@ export const redisRetriever = async (
 	const {
 		context: { transaction_id, action },
 	} = req.body;
-	const transaction = await redis.get(`${transaction_id}-${action}-to-server`);
+	// let transaction = await redis.get(`${transaction_id}-${action}-to-server`);
 	// let logs: TransactionType;
-	logger.info("---------------------------------")
-	logger.info("TIME:", Date.now())
-	logger.info("FOR ACTION:", action)
-	logger.info("PICKED FROM REDIS", transaction)
-	logger.info("---------------------------------")
+	// logger.info("---------------------------------")
+	// logger.info("TIME:", Date.now())
+	// logger.info("FOR ACTION:", action)
+	// logger.info("PICKED FROM REDIS", transaction)
+	// logger.info("---------------------------------")
 
-	let logs: TransactionType;
-	if (!transaction) {
-		logs = {
-			request: req.body
-		};
-		await redis.set(`${transaction_id}-${action}-to-server`, JSON.stringify(logs));
+	// let logs: TransactionType;
+	// // if (!transaction) {
+	// logs = {
+	// 	request: req.body,
+	// };
+	if (action !== "status" && action !== "on_status")
+		await redis.set(
+			`${transaction_id}-${action}-to-server`,
+			JSON.stringify({
+				request: req.body,
+			})
+		);
+	else {
+		const transactionKeys = await redis.keys(`${transaction_id}-*`);
+		const logIndex = transactionKeys.filter((e) =>
+			e.includes(`${action}-to-server`)
+		).length;
 
-		// next();
-		// return;
-	} else {
-		logs = JSON.parse(transaction);
+		await redis.set(
+			`${transaction_id}-${logIndex}-${action}-to-server`,
+			JSON.stringify({
+				request: req.body,
+			})
+		);
 	}
 
-	res.locals.logs = logs;
+	// next();
+	// return;
+	// } else {
+	// logs = JSON.parse(transaction);
+	// // }
+
+	// res.locals.logs = logs;
 	next();
 };

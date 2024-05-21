@@ -1,12 +1,14 @@
 import jsYaml from "js-yaml";
-import fs from "fs"
-import $RefParser, { RefParserSchema } from "@apidevtools/json-schema-ref-parser";
+import fs from "fs";
+import $RefParser, {
+	RefParserSchema,
+} from "@apidevtools/json-schema-ref-parser";
 import { execSync } from "child_process";
 import path from "path";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 import {
-	ACTIONS,
+	NEXT_ACTION,
 	B2B_SCENARIOS,
 	SERVICES_SCENARIOS,
 	DOMAINS,
@@ -17,7 +19,9 @@ const swaggerParse = async (swaggerPath: string) => {
 	const swaggerDocument = jsYaml.load(file);
 	try {
 		// console.log("Swagger Doc", swaggerDocument);
-		let schema = await $RefParser.dereference(swaggerDocument as RefParserSchema);
+		let schema = await $RefParser.dereference(
+			swaggerDocument as RefParserSchema
+		);
 		// console.log("SCHEMA", schema);
 		return schema;
 	} catch (err) {
@@ -31,7 +35,7 @@ const generateSwagger = async (
 	scenarios: typeof B2B_SCENARIOS | typeof SERVICES_SCENARIOS,
 	servers: { url: string; description: string }[]
 ) => {
-	const schema:any = await swaggerParse(inputPath);
+	const schema: any = await swaggerParse(inputPath);
 	schema.externalDocs = {
 		description: "User guide",
 		url: "https://github.com/tanyamadaan/b2b_mock_server/blob/feat-monorepo/README.md",
@@ -61,7 +65,7 @@ const generateSwagger = async (
 
 		if (
 			scenarios[
-				ACTIONS.next[key as keyof typeof ACTIONS.next] as keyof typeof scenarios
+				NEXT_ACTION[key as keyof typeof NEXT_ACTION] as keyof typeof scenarios
 			]
 		) {
 			schema.paths[i].post.parameters.push({
@@ -71,10 +75,12 @@ const generateSwagger = async (
 				schema: {
 					type: "string",
 					enum: scenarios[
-						ACTIONS.next[
-							key as keyof typeof ACTIONS.next
+						NEXT_ACTION[
+							key as keyof typeof NEXT_ACTION
 						] as keyof typeof scenarios
-					].map((each: { scenario: any }) => each.scenario),
+					].map((scenario)=> {
+						return scenario;
+					}),
 				},
 			});
 		}
@@ -121,12 +127,18 @@ const generateSwagger = async (
 };
 
 generateSwagger(
-	"./domain-repos/@retail-b2b/draft-2.x/api/build/build.yaml",
+	"./domain-repos/@retail-b2b/release-2.0.2/api/build/build.yaml",
 	"./openapi/retail-b2b",
 	B2B_SCENARIOS,
 	[
-		{ url: `${process.env.SERVER_LINK}/b2b/bpp`, description: "Sandbox as seller " },
-		{ url: `${process.env.SERVER_LINK}/b2b/bap`, description: "Sandbox as buyer" },
+		{
+			url: `${process.env.SERVER_LINK}/b2b/bpp`,
+			description: "Sandbox as seller ",
+		},
+		{
+			url: `${process.env.SERVER_LINK}/b2b/bap`,
+			description: "Sandbox as buyer",
+		},
 	]
 );
 
@@ -135,7 +147,13 @@ generateSwagger(
 	"./openapi/services",
 	SERVICES_SCENARIOS,
 	[
-		{ url: `${process.env.SERVER_LINK}/services/bpp`, description: "Sandbox as seller" },
-		{ url: `${process.env.SERVER_LINK}/services/bap`, description: "Sandbox as buyer" },
+		{
+			url: `${process.env.SERVER_LINK}/services/bpp`,
+			description: "Sandbox as seller",
+		},
+		{
+			url: `${process.env.SERVER_LINK}/services/bap`,
+			description: "Sandbox as buyer",
+		},
 	]
 );

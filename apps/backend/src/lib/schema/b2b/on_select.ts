@@ -9,7 +9,7 @@ export const onSelectSchema = {
 			properties: {
 				domain: {
 					type: "string",
-					enum: [DOMAIN.grocery],
+					enum: DOMAIN,
 				},
 				location: {
 					type: "object",
@@ -456,7 +456,7 @@ export const onSelectSchema = {
 										enum: ["BAP", "BPP"],
 									},
 								},
-								required: ["type", "collected_by"],
+								required: ["type"], // TODO
 							},
 						},
 					},

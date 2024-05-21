@@ -15,10 +15,12 @@ import { statusSchema } from "./status";
 import { updateSchema } from "./update";
 import { masterSchema } from "./master";
 import { TransactionType } from "../../utils";
+import { cancelSchema } from "./cancel";
+import { onCancelSchema } from "./on_cancel";
 
 export const b2bSchemaValidator =
 	(
-		action:
+		schema:
 			| "search"
 			| "on_search"
 			| "select"
@@ -52,7 +54,7 @@ export const b2bSchemaValidator =
 			}>,
 			isValid: boolean;
 
-		switch (action) {
+		switch (schema) {
 			case "search":
 				validate = ajv.compile(searchSchema);
 				break;
@@ -89,7 +91,12 @@ export const b2bSchemaValidator =
 			case "on_update":
 				validate = ajv.compile(onUpdateSchema);
 				break;
-
+			case "cancel":
+				validate = ajv.compile(cancelSchema)
+				break;
+			case "on_cancel":
+				validate = ajv.compile(onCancelSchema)
+				break;
 			default:
 				res.status(400).json({
 					message: {
@@ -106,7 +113,7 @@ export const b2bSchemaValidator =
 		}
 
 		isValid = validate(req.body);
-
+		// console.log('isValid::::: ', isValid)
 		if (!isValid) {
 			res.status(400).json({
 				message: {
@@ -117,7 +124,18 @@ export const b2bSchemaValidator =
 				error: {
 					type: "JSON-SCHEMA-ERROR",
 					code: "50009",
-					message: validate.errors?.map(({ message }) => ({ message })),
+					message: validate.errors?.map(
+						({ message, params, instancePath }) => ({
+							message: `${message}${
+								params.allowedValues ? ` (${params.allowedValues})` : ""
+							}${params.allowedValue ? ` (${params.allowedValue})` : ""}${
+								params.additionalProperty
+									? ` (${params.additionalProperty})`
+									: ""
+							}`,
+							details: instancePath
+						})
+					),
 				},
 			});
 			return;

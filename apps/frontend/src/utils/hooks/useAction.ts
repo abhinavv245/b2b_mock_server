@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import { useState } from "react";
-import { B2B_SCENARIOS, SERVICES_SCENARIOS } from "openapi-specs/constants";
-import { NEXT_ACTION } from "../constants";
+import { B2B_SCENARIOS, SERVICES_SCENARIOS, NEXT_ACTION } from "openapi-specs/constants";
 
 export const useAction = (domain: string) => {
 	const [action, setAction] = useState<string>();

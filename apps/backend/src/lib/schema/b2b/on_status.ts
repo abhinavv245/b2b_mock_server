@@ -9,7 +9,7 @@ export const onStatusSchema = {
 			properties: {
 				domain: {
 					type: "string",
-					enum: [DOMAIN.grocery],
+					enum: DOMAIN,
 				},
 				location: {
 					type: "object",
@@ -153,7 +153,7 @@ export const onStatusSchema = {
 												required: ["count"],
 											},
 										},
-										addtionalProperties: false,
+										additionalProperties: false,
 										required: ["selected"],
 									},
 								},
@@ -565,6 +565,8 @@ export const onStatusSchema = {
 									type: "string",
 								},
 							},
+							isQuoteMatching: true,
+
 							required: ["price", "breakup", "ttl"],
 						},
 						payments: {
@@ -607,6 +609,15 @@ export const onStatusSchema = {
 										type: "string",
 									},
 									"@ondc/org/buyer_app_finder_fee_amount": {
+										type: "string",
+									},
+									"@ondc/org/settlement_basis": {
+										type: "string",
+									},
+									"@ondc/org/settlement_window": {
+										type: "string",
+									},
+									"@ondc/org/withholding_amount": {
 										type: "string",
 									},
 									"@ondc/org/settlement_details": {
@@ -692,6 +703,9 @@ export const onStatusSchema = {
 									"collected_by",
 									"@ondc/org/buyer_app_finder_fee_type",
 									"@ondc/org/buyer_app_finder_fee_amount",
+									"@ondc/org/settlement_basis",
+									"@ondc/org/settlement_window",
+									"@ondc/org/withholding_amount",
 								],
 							},
 						},
@@ -740,5 +754,6 @@ export const onStatusSchema = {
 			required: ["order"],
 		},
 	},
+
 	required: ["context", "message"],
 };

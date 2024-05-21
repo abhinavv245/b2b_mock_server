@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { verifyHeader } from "../lib/utils/auth";
 import { Locals } from "../interfaces";
-import { B2B_BAP_MOCKSERVER_URL } from "../lib/utils";
+import { B2B_BAP_MOCKSERVER_URL, logger } from "../lib/utils";
 
 export const authValidatorMiddleware = async (
 	req: Request,
@@ -42,12 +42,7 @@ export const authValidatorMiddleware = async (
 			const auth_header = req.headers["authorization"] || "";
 			// console.log(req.body?.context?.transaction_id, "headers", auth_header);
 
-			var verified = await verifyHeader(auth_header, req, res);
-			console.log(
-				req.body?.context?.transaction_id,
-				"Verification status:",
-				verified
-			);
+			var verified = await verifyHeader(auth_header, (req as any).rawBody.toString());
 
 			if (!verified) {
 				return res.status(401).json({
@@ -64,6 +59,16 @@ export const authValidatorMiddleware = async (
 			next();
 		}
 	} catch (err) {
-		next(err);
+		logger.error(err)
+		return res.status(401).json({
+			message: {
+				ack: {
+					status: "NACK",
+				},
+			},
+			error: {
+				message: "Authentication failed",
+			},
+		});
 	}
 };

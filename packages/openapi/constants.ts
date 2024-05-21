@@ -4,41 +4,17 @@ export const B2B_SCENARIOS = {
 	select: [
 		{
 			name: "RFQ",
-			scenario: "rfq",
-		},
-		{
-			name: "Self-Pickup",
-			scenario: "self-pickup",
+			scenario: "rfq", // Select Domestic
 		},
 		{
 			name: "Non-RFQ",
 			scenario: "non-rfq",
-		},
-		{
-			name: "BAP Chat",
-			scenario: "bap-chat",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
 		},
 	],
 	on_select: [
 		{
-			name: "RFQ",
-			scenario: "rfq",
-		},
-		{
-			name: "Self-Pickup",
-			scenario: "self-pickup",
-		},
-		{
-			name: "Non-RFQ",
-			scenario: "non-rfq",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
+			name: "Default",
+			scenario: "default",
 		},
 		{
 			name: "Non Serviceable",
@@ -51,87 +27,35 @@ export const B2B_SCENARIOS = {
 	],
 	init: [
 		{
-			name: "RFQ",
-			scenario: "rfq",
+			name: "On Fulfillment",
+			scenario: "on-fulfillment", //default
 		},
 		{
-			name: "Non-RFQ",
-			scenario: "non-rfq",
+			name: "Prepaid Payment Collected By BPP",
+			scenario: "prepaid-bpp-payment",
 		},
 		{
-			name: "BPP Payment",
-			scenario: "bpp-payment",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
-		},
-	],
-	on_init: [
-		{
-			name: "RFQ",
-			scenario: "rfq",
-		},
-		{
-			name: "Non-RFQ",
-			scenario: "non-rfq",
-		},
-		{
-			name: "Payment BPP Non-RFQ",
-			scenario: "payment-bpp-non-rfq",
-		},
-		{
-			name: "Self-Pickup",
-			scenario: "self-pickup",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
-		},
-		{
-			name: "Reject RFQ",
-			scenario: "reject-rfq",
-		},
-	],
-	confirm: [
-		{
-			name: "RFQ",
-			scenario: "rfq",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
-		},
-		{
-			name: "Non-RFQ",
-			scenario: "non-rfq",
+			name: "Prepaid Payment Collected By BAP",
+			scenario: "prepaid-bap-payment",
 		},
 	],
 	on_confirm: [
 		{
-			name: "Non-RFQ",
-			scenario: "non-rfq",
+			name: "Default",
+			scenario: "default",
 		},
 		{
-			name: "Rejected",
-			scenario: "rejected",
-		},
-		{
-			name: "RFQ",
-			scenario: "rfq",
-		},
-		{
-			name: "Exports",
-			scenario: "exports",
+			name: "Cancelled",
+			scenario: "cancelled",
 		},
 	],
 	on_status: [
 		{
-			name: "BPP Payment",
+			name: "BPP Payment-Success",
 			scenario: "bpp-payment",
 		},
 		{
-			name: "BPP Payment Error",
+			name: "BPP Payment-Error",
 			scenario: "bpp-payment-error",
 		},
 		{
@@ -158,7 +82,7 @@ export const B2B_SCENARIOS = {
 	on_update: [
 		{
 			name: "Fulfillments",
-			scenario: "fulfillment",
+			scenario: "fulfillment", // default
 		},
 		{
 			name: "Prepaid BAP",
@@ -172,89 +96,45 @@ export const B2B_SCENARIOS = {
 };
 
 export const SERVICES_SCENARIOS = {
-	select: [
-		// {
-		// 	name: "Consultation",
-		// 	scenario: "consultation",
-		// },
-		{
-			name: "Selections",
-			scenario: "selection",
-		},
-		// {
-		// 	name: "Service",
-		// 	scenario: "service",
-		// },
-		// {
-		// 	name: "Without Schedule",
-		// 	scenario: "without-schedule",
-		// },
-	],
+	// select: [
+	// 	{
+	// 		name: "Selections",
+	// 		scenario: "selection",
+	// 	},
+	// 	{
+	// 		name: "Customization",
+	// 		scenario: "customization",
+	// 	},
+	// ],
 	on_select: [
-		// {
-		// 	name: "Consultation Confirmed",
-		// 	scenario: "consultation-confirmed",
-		// },
-		// {
-		// 	name: "Consultation Rejected",
-		// 	scenario: "consultation-rejected",
-		// },
-		// {
-		// 	name: "Service Confirmed",
-		// 	scenario: "service-confirmed",
-		// },
-		// {
-		// 	name: "Service Rejected",
-		// 	scenario: "service-rejected",
-		// },
-		// {
-		// 	name: "NACK",
-		// 	scenario: "nack",
-		// },
 		{
-			name:"Schedule Confirmed",
-			scenario:"schedule_confirmed"
+			name: "Schedule Confirmed",
+			scenario: "schedule_confirmed",
 		},
 		{
-			name:"Schedule Rejected",
-			scenario:"schedule_rejected"
-		}
-	],
-	init: [
-		// {
-		// 	name: "Consultation",
-		// 	scenario: "consultation",
-		// },
-		{
-			name: "Service",
-			scenario: "service",
+			name: "Schedule Rejected",
+			scenario: "schedule_rejected",
 		},
 	],
+	// init: [
+	// 	{
+	// 		name: "Service",
+	// 		scenario: "service",
+	// 	},
+	// ],
 	on_init: [
-		// {
-		// 	name: "Consultation",
-		// 	scenario: "consultation",
-		// },
 		{
 			name: "Service",
 			scenario: "service",
 		},
 	],
-	confirm: [
-		// {
-		// 	name: "Consultation",
-		// 	scenario: "consultation",
-		// },
-		{
-			name: "Service",
-			scenario: "service",
-		},
-	],
+	// confirm: [
+	// 	{
+	// 		name: "Service",
+	// 		scenario: "service",
+	// 	},
+	// ],
 	on_confirm: [
-		// {
-		// 	name: "Consultation",
-		// 	scenario: "consultation",
-		// },
 		{
 			name: "Service",
 			scenario: "service",
@@ -303,21 +183,37 @@ export const SERVICES_SCENARIOS = {
 		},
 	],
 };
+
 export const DOMAINS = {
 	b2b: "B2B",
 	services: "Services - Home Services",
 };
-export const ACTIONS = {
-	next: {
-		search: "on_search",
-		on_search: "select",
-		select: "on_select",
-		on_select: "init",
-		init: "on_init",
-		on_init: "confirm",
-		confirm: "on_confirm",
-		update: "on_update",
-		status: "on_status",
-		cancel: "on_cancel",
-	},
+
+export const NEXT_ACTION = {
+	search: "on_search",
+	on_search: "select",
+	select: "on_select",
+	on_select: "init",
+	init: "on_init",
+	on_init: "confirm",
+	confirm: "on_confirm",
+	update: "on_update",
+	status: "on_status",
+	cancel: "on_cancel",
+};
+
+export const PREV_ACTION = {
+	on_search: "search",
+	select: "on_search",
+	on_select: "select",
+	init: "on_select",
+	on_init: "init",
+	confirm: "on_init",
+	on_confirm: "confirm",
+	status: "on_confirm",
+	on_status: "status",
+	cancel: "on_confirm",
+	on_cancel: "cancel",
+	update: "on_confirm",
+	on_update: "update",
 };
